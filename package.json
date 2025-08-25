@@ -9,6 +9,7 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@ant-design/icons": "^6.0.0",
     "@cloudflare/workers-types": "^4.20250823.0",
     "antd": "^5.27.1",
     "drizzle-orm": "^0.44.4",
@@ -22,8 +23,11 @@
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "autoprefixer": "^10.4.21",
     "eslint": "^9",
     "eslint-config-next": "15.5.0",
+    "postcss": "^8.5.6",
+    "postcss-import": "^16.1.1",
     "tailwindcss": "^4",
     "typescript": "^5",
     "wrangler": "^4.32.0"
