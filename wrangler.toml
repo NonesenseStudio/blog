@@ -1,7 +1,6 @@
 name = "blog"
 compatibility_date = "2025-08-25"
-main = ".open-next/worker.js"  # 或 "src/index.ts"
-compatibility_date = "2025-08-26"
+main = ".open-next/worker.js"  # 或 "sr
 compatibility_flags = ["nodejs_compat"]
 [assets]
 directory = ".open-next/assets"
