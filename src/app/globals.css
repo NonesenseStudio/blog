@@ -1,3 +1,4 @@
+@layer theme, base, antd, components, utilities;
 @import "tailwindcss";
 
 :root {
@@ -17,6 +18,10 @@
     --background: #0a0a0a;
     --foreground: #ededed;
   }
+}
+.dark {
+  --background: #141414;
+  --foreground: #ededed;
 }
 
 body {
