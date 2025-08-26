@@ -1,6 +1,10 @@
 name = "blog"
 compatibility_date = "2025-08-25"
 main = ".open-next/worker.js"  # 或 "sr
-compatibility_flags = ["nodejs_compat"]
+compatibility_flags = [ "nodejs_compat", "global_fetch_strictly_public" ]
 [assets]
 directory = ".open-next/assets"
+binding = "ASSETS"
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+service = "blog"
