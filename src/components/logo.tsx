@@ -23,7 +23,6 @@ const Logo: React.FC<LogoProps> = ({
   height = 57,
   ...props
 }) => {
-    console.log(fill)
   return (
     <svg
       className={className}

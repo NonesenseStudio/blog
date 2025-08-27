@@ -57,7 +57,7 @@ export default function RootLayout({
     },
     {
       key: "about",
-      label: <Link href="/about">关于</Link>,
+      label: <Link href="/about">关于 boring</Link>,
     },
   ];
   // 用户菜单项

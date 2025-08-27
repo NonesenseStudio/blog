@@ -1,8 +1,24 @@
-export default function AboutPage() {
-  return (
-    <div>
-      <h1>欢迎访问关于我们页面</h1>
-      <p>这里是关于我们内容展示区域</p>
-    </div>
-  );
+// app/about/page.tsx
+import fs from "fs";
+import path from "path";
+import AboutClient from "./AboutClient";
+
+async function getMarkdownContent() {
+  try {
+    const markdownPath = path.join(
+      process.cwd(),
+      "public",
+      "markdown",
+      "about.md",
+    );
+    return fs.readFileSync(markdownPath, "utf8");
+  } catch (error) {
+    console.error("Error reading markdown file:", error);
+    return "# Error\nCould not load the about page content.";
+  }
+}
+
+export default async function AboutPage() {
+  const markdownContent = await getMarkdownContent();
+  return <AboutClient markdownContent={markdownContent} />;
 }

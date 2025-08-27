@@ -2,7 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import { ConfigProvider, theme, Layout as AntLayout } from "antd";
+import { ConfigProvider, theme, Layout as AntLayout, App } from "antd";
 const { Footer } = AntLayout;
 import { useTheme } from "next-themes";
 
@@ -21,7 +21,11 @@ function Copyright() {
   );
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
   const [mounted, setMounted] = useState(false);
   const { resolvedTheme } = useTheme();
 
@@ -46,13 +50,15 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           },
         }}
       >
-        {" "}
-        <AntLayout style={{ minHeight: "100vh" }}>
-          {children}
-          <Footer className="text-center select-none">
-            <Copyright />
-          </Footer>
-        </AntLayout>
+        <App>
+          {" "}
+          <AntLayout style={{ minHeight: "100vh" }}>
+            {children}
+            <Footer className="text-center select-none">
+              <Copyright />
+            </Footer>
+          </AntLayout>
+        </App>
       </ConfigProvider>
     </AntdRegistry>
   );
