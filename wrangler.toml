@@ -1,0 +1,42 @@
+# Schema reference
+schema = "node_modules/wrangler/config-schema.json"
+
+# Main worker file
+main = ".open-next/worker.js"
+
+# Worker name
+name = "blog"
+
+# Compatibility settings
+compatibility_date = "2025-08-26"
+
+# Compatibility flags
+compatibility_flags = [
+    # Enable Node.js API
+    # See https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag
+    "nodejs_compat",
+    # Allow to fetch URLs in your app
+    # See https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public
+    "global_fetch_strictly_public"
+]
+
+# Observability settings
+[observability.logs]
+enabled = true
+
+# Assets configuration
+[assets]
+directory = ".open-next/assets"
+binding = "ASSETS"
+
+# Services configuration
+[[services]]
+binding = "WORKER_SELF_REFERENCE"
+# The service should match the "name" of your worker
+service = "blog"
+
+# R2 Buckets configuration (commented out)
+# [[r2_buckets]]
+# # Create a R2 binding with the binding name "NEXT_INC_CACHE_R2_BUCKET"
+# binding = "NEXT_INC_CACHE_R2_BUCKET"
+# bucket_name = "<BUCKET_NAME>"
