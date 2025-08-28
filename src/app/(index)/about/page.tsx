@@ -1,7 +1,7 @@
-// app/about/page.tsx
 import fs from "fs";
 import path from "path";
 import AboutClient from "./AboutClient";
+import { Metadata } from "next";
 
 async function getMarkdownContent() {
   try {
@@ -18,7 +18,11 @@ async function getMarkdownContent() {
   }
 }
 
+export const metadata: Metadata = {
+  title: "关于 boring",
+};
 export default async function AboutPage() {
   const markdownContent = await getMarkdownContent();
-  return <AboutClient markdownContent={markdownContent} />;
+  // return <AboutClient markdownContent={markdownContent} />;
+  return <div>About page is coming soon.</div>;
 }

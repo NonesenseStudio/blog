@@ -8,12 +8,18 @@ importers:
 
   .:
     dependencies:
+      '@ant-design/cssinjs':
+        specifier: ^1.24.0
+        version: 1.24.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@ant-design/icons':
         specifier: ^6.0.0
         version: 6.0.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@ant-design/nextjs-registry':
         specifier: ^1.1.0
         version: 1.1.0(@ant-design/cssinjs@1.24.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(antd@5.27.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(next@15.5.0(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      '@ant-design/v5-patch-for-react-19':
+        specifier: ^1.0.3
+        version: 1.0.3(antd@5.27.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
       '@cloudflare/workers-types':
         specifier: ^4.20250826.0
         version: 4.20250826.0
@@ -159,6 +165,14 @@ packages:
     resolution: {integrity: sha512-EzlvzE6xQUBrZuuhSAFTdsr4P2bBBHGZwKFemEfq8gIGyIQCxalYfZW/T2ORbtQx5rU69o+WycP3exY/7T1hGA==}
     peerDependencies:
       react: '>=16.9.0'
+
+  '@ant-design/v5-patch-for-react-19@1.0.3':
+    resolution: {integrity: sha512-iWfZuSUl5kuhqLUw7jJXUQFMMkM7XpW7apmKzQBQHU0cpifYW4A79xIBt9YVO5IBajKpPG5UKP87Ft7Yrw1p/w==}
+    engines: {node: '>=12.x'}
+    peerDependencies:
+      antd: '>=5.22.6'
+      react: '>=19.0.0'
+      react-dom: '>=19.0.0'
 
   '@ast-grep/napi-darwin-arm64@0.35.0':
     resolution: {integrity: sha512-T+MN4Oinc+sXjXCIHzfxDDWY7r2pKgPxM6zVeVlkMTrJV2mJtyKYBIS+CABhRM6kflps2T2I6l4DGaKV/8Ym9w==}
@@ -4659,6 +4673,12 @@ snapshots:
       react: 19.1.0
       resize-observer-polyfill: 1.5.1
       throttle-debounce: 5.0.2
+
+  '@ant-design/v5-patch-for-react-19@1.0.3(antd@5.27.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0))(react-dom@19.1.0(react@19.1.0))(react@19.1.0)':
+    dependencies:
+      antd: 5.27.1(react-dom@19.1.0(react@19.1.0))(react@19.1.0)
+      react: 19.1.0
+      react-dom: 19.1.0(react@19.1.0)
 
   '@ast-grep/napi-darwin-arm64@0.35.0':
     optional: true

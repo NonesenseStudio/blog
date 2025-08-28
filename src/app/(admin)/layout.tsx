@@ -1,15 +1,14 @@
 import { AntdRegistry } from "@ant-design/nextjs-registry";
-import FrontendLayout from "@/components/layout/FrontendLayout";
+import BackendLayout from "@/components/layout/BackendLayout";
 import React from "react";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import "@/app/globals.css";
-import "antd/dist/reset.css";
 
 export const metadata: Metadata = {
   title: {
-    template: "%s | A Boring Blog",
-    default: "A Boring Blog",
+    template: "%s | 后台管理系统",
+    default: "后台管理系统",
   },
 };
 export default function RootLayout({
@@ -26,9 +25,7 @@ export default function RootLayout({
           enableSystem={true} // 启用系统主题检测
           disableTransitionOnChange // 避免切换时的视觉闪烁
         >
-          <AntdRegistry>
-            <FrontendLayout>{children}</FrontendLayout>
-          </AntdRegistry>
+          {children}
         </ThemeProvider>
       </body>
     </html>

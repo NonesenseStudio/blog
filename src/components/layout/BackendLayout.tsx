@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import Layout from "./AntLayout";
 import { AntdRegistry } from "@ant-design/nextjs-registry";
 import {
   ConfigProvider,
@@ -36,7 +37,7 @@ export default function RootLayout({
 
   // 根据路径判断当前选中的菜单项
   const getSelectedMenuKeys = () => {
-    if (pathname === "/") return ["home"];
+    if (pathname.startsWith("/dashboard")) return ["dashboard"];
     if (pathname.startsWith("/posts")) return ["posts"];
     if (pathname.startsWith("/categories")) return ["categories"];
     if (pathname.startsWith("/about")) return ["about"];
@@ -75,115 +76,76 @@ export default function RootLayout({
   };
 
   return (
-    <html lang="zh-CN">
-      <body>
-        <AntdRegistry>
-          <ConfigProvider
-            theme={{
-              algorithm: theme.defaultAlgorithm,
-              token: {
-                colorPrimary: "#1677ff",
+    <Layout>
+      <AntLayout>
+        <Sider trigger={null} collapsible collapsed={collapsed} theme="light">
+          <div
+            style={{
+              height: 32,
+              margin: 16,
+              background: "rgba(0, 0, 0, 0.2)",
+            }}
+          />
+          <Menu
+            mode="inline"
+            selectedKeys={getSelectedMenuKeys()}
+            items={[
+              {
+                key: "dashboard",
+                icon: <HomeOutlined />,
+                label: <Link href="/dashboard">首页</Link>,
               },
+            ]}
+          />
+        </Sider>
+        <AntLayout>
+          <Header
+            style={{
+              padding: 0,
+              background: "#fff",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
           >
-            <AntLayout style={{ minHeight: "100vh" }}>
-              <Sider
-                trigger={null}
-                collapsible
-                collapsed={collapsed}
-                theme="light"
+            <div>
+              {React.createElement(
+                collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
+                {
+                  className: "trigger",
+                  onClick: () => setCollapsed(!collapsed),
+                  style: {
+                    fontSize: "18px",
+                    padding: "0 24px",
+                    cursor: "pointer",
+                  },
+                },
+              )}
+            </div>
+            <div style={{ marginRight: "24px" }}>
+              <Dropdown
+                menu={{
+                  items: userMenuItems,
+                  onClick: handleUserMenuClick,
+                }}
+                placement="bottomRight"
               >
-                <div
-                  style={{
-                    height: 32,
-                    margin: 16,
-                    background: "rgba(0, 0, 0, 0.2)",
-                  }}
-                />
-                <Menu
-                  mode="inline"
-                  selectedKeys={getSelectedMenuKeys()}
-                  items={[
-                    {
-                      key: "home",
-                      icon: <HomeOutlined />,
-                      label: <Link href="/">首页</Link>,
-                    },
-                    {
-                      key: "posts",
-                      icon: <HomeOutlined />,
-                      label: <Link href="/posts">文章</Link>,
-                    },
-                    {
-                      key: "categories",
-                      icon: <HomeOutlined />,
-                      label: <Link href="/categories">分类</Link>,
-                    },
-                    {
-                      key: "about",
-                      icon: <HomeOutlined />,
-                      label: <Link href="/src/app/(index)/about/about">关于</Link>,
-                    },
-                  ]}
-                />
-              </Sider>
-              <AntLayout>
-                <Header
-                  style={{
-                    padding: 0,
-                    background: "#fff",
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                  }}
-                >
-                  <div>
-                    {React.createElement(
-                      collapsed ? MenuUnfoldOutlined : MenuFoldOutlined,
-                      {
-                        className: "trigger",
-                        onClick: () => setCollapsed(!collapsed),
-                        style: {
-                          fontSize: "18px",
-                          padding: "0 24px",
-                          cursor: "pointer",
-                        },
-                      },
-                    )}
-                  </div>
-                  <div style={{ marginRight: "24px" }}>
-                    <Dropdown
-                      menu={{
-                        items: userMenuItems,
-                        onClick: handleUserMenuClick,
-                      }}
-                      placement="bottomRight"
-                    >
-                      <Avatar
-                        style={{ cursor: "pointer" }}
-                        icon={<UserOutlined />}
-                      />
-                    </Dropdown>
-                  </div>
-                </Header>
-                <Content
-                  style={{
-                    margin: "24px 16px",
-                    padding: 24,
-                    minHeight: 280,
-                    background: "#fff",
-                  }}
-                >
-                  {children}
-                </Content>
-                <Footer style={{ textAlign: "center" }}>
-                  Blog ©{new Date().getFullYear()} Created by Your Name
-                </Footer>
-              </AntLayout>
-            </AntLayout>
-          </ConfigProvider>
-        </AntdRegistry>
-      </body>
-    </html>
+                <Avatar style={{ cursor: "pointer" }} icon={<UserOutlined />} />
+              </Dropdown>
+            </div>
+          </Header>
+          <Content
+            style={{
+              margin: "24px 16px",
+              padding: 24,
+              minHeight: 280,
+              background: "#fff",
+            }}
+          >
+            {children}
+          </Content>
+        </AntLayout>
+      </AntLayout>
+    </Layout>
   );
 }

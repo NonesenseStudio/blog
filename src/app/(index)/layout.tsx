@@ -4,7 +4,7 @@ import React from "react";
 import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import "@/app/globals.css";
-import "antd/dist/reset.css";
+
 
 export const metadata: Metadata = {
   title: {
