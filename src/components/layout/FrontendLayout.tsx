@@ -30,17 +30,13 @@ export default function RootLayout({
   }, []);
 
   useEffect(() => {
-    setSelectedKeys(getSelectedMenuKeys());
+    let keys: string[] = [];
+    if (pathname === "/") keys = ["home"];
+    else if (pathname.startsWith("/posts")) keys = ["posts"];
+    else if (pathname.startsWith("/categories")) keys = ["categories"];
+    else if (pathname.startsWith("/about")) keys = ["about"];
+    setSelectedKeys(keys);
   }, [pathname]);
-
-  // 根据路径判断当前选中的菜单项
-  const getSelectedMenuKeys = () => {
-    if (pathname === "/") return ["home"];
-    if (pathname.startsWith("/posts")) return ["posts"];
-    if (pathname.startsWith("/categories")) return ["categories"];
-    if (pathname.startsWith("/about")) return ["about"];
-    return [];
-  };
 
   const tabItems = [
     {

@@ -135,19 +135,19 @@ export default function AntdMarkdown({
 
   // 添加清理逻辑
   useEffect(() => {
+    // 在 effect 内部保存当前 ref 的值
+    const currentRef = markdownRef.current;
+
     return () => {
       // 标记组件已卸载
       isMounted.current = false;
 
       // 清理 DOM 节点
-      if (markdownRef.current) {
+      if (currentRef) {
         // 移除所有事件监听器
-        const clone = markdownRef.current.cloneNode(false);
-        if (markdownRef.current.parentNode) {
-          markdownRef.current.parentNode.replaceChild(
-            clone,
-            markdownRef.current,
-          );
+        const clone = currentRef.cloneNode(false);
+        if (currentRef.parentNode) {
+          currentRef.parentNode.replaceChild(clone, currentRef);
         }
       }
 
@@ -158,7 +158,7 @@ export default function AntdMarkdown({
         (SyntaxHighlighter as any).languages = {};
       }
     };
-  }, []);
+  }, []); // 空依赖数组表示这个 effect 只在组件挂载和卸载时运行
 
   // 处理内容更新
   useEffect(() => {
