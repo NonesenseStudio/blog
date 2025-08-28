@@ -1,25 +1,8 @@
-# Schema reference
-schema = "node_modules/wrangler/config-schema.json"
-
-# Main worker file
-main = ".open-next/worker.js"
-
-# Worker name
 name = "blog"
-
-# Compatibility settings
+main = ".open-next/worker.js"
 compatibility_date = "2025-08-26"
 
-# Compatibility flags
-compatibility_flags = [
-    # Enable Node.js API
-    # See https://developers.cloudflare.com/workers/configuration/compatibility-flags/#nodejs-compatibility-flag
-    "nodejs_compat",
-    # Allow to fetch URLs in your app
-    # See https://developers.cloudflare.com/workers/configuration/compatibility-flags/#global-fetch-strictly-public
-    "global_fetch_strictly_public"
-]
-
+compatibility_flags = ["nodejs_compat", "global_fetch_strictly_public"]
 # Observability settings
 [observability.logs]
 enabled = true

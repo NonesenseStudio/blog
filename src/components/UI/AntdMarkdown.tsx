@@ -7,7 +7,6 @@ import remarkGfm from "remark-gfm";
 import rehypeRaw from "rehype-raw";
 import { Prism as SyntaxHighlighter } from "react-syntax-highlighter";
 import { tomorrow } from "react-syntax-highlighter/dist/esm/styles/prism";
-
 const { Title, Paragraph, Text, Link } = Typography;
 
 // 动态导入 ReactMarkdown 以避免服务器端渲染问题
@@ -45,17 +44,17 @@ export default function AntdMarkdown({
   // 使用 useMemo 优化组件渲染
   const components = React.useMemo(
     () => ({
-      p: ({ node, ...props }: any) => <Paragraph {...props} />,
+      p: ({ ...props }: any) => <Paragraph {...props} />,
 
-      h1: ({ node, ...props }: any) => <Title level={1} {...props} />,
-      h2: ({ node, ...props }: any) => <Title level={2} {...props} />,
-      h3: ({ node, ...props }: any) => <Title level={3} {...props} />,
-      h4: ({ node, ...props }: any) => <Title level={4} {...props} />,
-      h5: ({ node, ...props }: any) => <Title level={5} {...props} />,
-      h6: ({ node, ...props }: any) => <Title level={5} {...props} />,
-      hr: ({ node, ...props }: any) => <Divider {...props} />,
+      h1: ({ ...props }: any) => <Title level={1} {...props} />,
+      h2: ({ ...props }: any) => <Title level={2} {...props} />,
+      h3: ({ ...props }: any) => <Title level={3} {...props} />,
+      h4: ({ ...props }: any) => <Title level={4} {...props} />,
+      h5: ({ ...props }: any) => <Title level={5} {...props} />,
+      h6: ({ ...props }: any) => <Title level={5} {...props} />,
+      hr: ({ ...props }: any) => <Divider {...props} />,
 
-      code: ({ node, inline, className, children, ...props }: CodeProps) => {
+      code: ({ inline, className, children, ...props }: CodeProps) => {
         const match = /language-(\w+)/.exec(className || "");
         if (!inline && match) {
           return (
@@ -76,7 +75,7 @@ export default function AntdMarkdown({
         );
       },
 
-      a: ({ node, href, title, children, ...props }: any) => (
+      a: ({ href, title, children }: any) => (
         <Link
           href={href}
           title={title}
@@ -87,7 +86,7 @@ export default function AntdMarkdown({
         </Link>
       ),
 
-      blockquote: ({ node, children, ...props }: any) => {
+      blockquote: ({ children, ...props }: any) => {
         const safeProps: React.HTMLAttributes<HTMLDivElement> = {
           className: props.className,
           id: props.id,
@@ -104,16 +103,12 @@ export default function AntdMarkdown({
         return <div {...safeProps}>{children}</div>;
       },
 
-      ul: ({ node, ...props }: any) => (
-        <ul {...props} style={{ paddingLeft: 20 }} />
-      ),
-      ol: ({ node, ...props }: any) => (
-        <ol {...props} style={{ paddingLeft: 20 }} />
-      ),
-      li: ({ node, ...props }: any) => <li {...props} />,
-      strong: ({ node, ...props }: any) => <strong {...props} />,
-      em: ({ node, ...props }: any) => <em {...props} />,
-      table: ({ node, ...props }: any) => (
+      ul: ({ ...props }: any) => <ul {...props} style={{ paddingLeft: 20 }} />,
+      ol: ({ ...props }: any) => <ol {...props} style={{ paddingLeft: 20 }} />,
+      li: ({ ...props }: any) => <li {...props} />,
+      strong: ({ ...props }: any) => <strong {...props} />,
+      em: ({ ...props }: any) => <em {...props} />,
+      table: ({ ...props }: any) => (
         <div style={{ overflowX: "auto" }}>
           <table
             {...props}
@@ -121,7 +116,7 @@ export default function AntdMarkdown({
           />
         </div>
       ),
-      th: ({ node, ...props }: any) => (
+      th: ({ ...props }: any) => (
         <th
           {...props}
           style={{
@@ -131,7 +126,7 @@ export default function AntdMarkdown({
           }}
         />
       ),
-      td: ({ node, ...props }: any) => (
+      td: ({ ...props }: any) => (
         <td {...props} style={{ border: "1px solid #ddd", padding: "8px" }} />
       ),
     }),
@@ -178,8 +173,9 @@ export default function AntdMarkdown({
         components={components}
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeRaw]}
-        children={content}
-      />
+      >
+        {content}
+      </ReactMarkdown>
     </div>
   );
 }
