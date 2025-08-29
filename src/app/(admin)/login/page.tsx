@@ -20,7 +20,6 @@ export default function LoginPage() {
         <Title level={2} className="text-center mb-8 dark:text-gray-200">
           后台管理系统
         </Title>
-
         <Form layout="vertical" onFinish={handleSubmit}>
           <Form.Item
             name="username"
@@ -42,7 +41,8 @@ export default function LoginPage() {
             rules={[{ required: true, message: "请输入密码" }]}
             className="mb-6"
           >
-            <Input.Password
+            <Input
+              type="password"
               prefix={
                 <LockOutlined className="text-gray-400 dark:text-gray-300" />
               }
@@ -60,7 +60,7 @@ export default function LoginPage() {
               size="large"
               className="h-12 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
             >
-              登录
+              <span className="text-white text-xl">登录</span>
             </Button>
           </Form.Item>
         </Form>

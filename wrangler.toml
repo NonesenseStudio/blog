@@ -23,3 +23,9 @@ service = "blog"
 # # Create a R2 binding with the binding name "NEXT_INC_CACHE_R2_BUCKET"
 # binding = "NEXT_INC_CACHE_R2_BUCKET"
 # bucket_name = "<BUCKET_NAME>"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "blog"
+database_id = "79f6b956-7a4a-42df-a669-9d6708068958"
+migrations_dir = "./src/db/migrations"
