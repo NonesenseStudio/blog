@@ -1,6 +1,6 @@
 // src/app/api/d1/route.ts
 import { NextResponse } from "next/server";
-import { getDb } from "@/db";
+import { getDb, getDbAsync } from "@/db";
 // 模拟数据
 const mockData = [
   { id: 1, name: "Example 1" },
@@ -13,7 +13,8 @@ export async function GET() {
     // 本地开发使用模拟数据
     if (process.env.NODE_ENV === "development") {
       const db = getDb();
-      return NextResponse.json({ mockData, db });
+      const asyncDb = await getDbAsync();
+      return NextResponse.json({ mockData, db, asyncDb });
     }
 
     // 生产环境中使用 D1

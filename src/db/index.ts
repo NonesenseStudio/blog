@@ -5,10 +5,12 @@ import { cache } from "react";
 
 export const getDb = cache(() => {
   const { env } = getCloudflareContext();
+  console.log(env);
   return drizzle(env.DB, { schema });
 });
 
 export const getDbAsync = cache(async () => {
   const { env } = await getCloudflareContext({ async: true });
+  console.log(env);
   return drizzle(env.DB, { schema });
 });
