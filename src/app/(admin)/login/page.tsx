@@ -3,9 +3,9 @@
 import { Button, Form, Input, Card, Typography } from "antd";
 import { LockOutlined, UserOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
+import http from "@/lib/http";
 
 const { Title } = Typography;
-
 export default function LoginPage() {
   const router = useRouter();
 
@@ -13,7 +13,9 @@ export default function LoginPage() {
     // 暂时不需要验证，直接跳转到dashboard
     router.push("/dashboard");
   };
-
+  http.get("/api/d1").then((r) => {
+    console.log(r);
+  });
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-50 dark:bg-gray-900">
       <Card className="w-full max-w-md shadow-lg dark:shadow-gray-800 dark:bg-gray-800">
