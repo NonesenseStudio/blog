@@ -12,7 +12,7 @@ export async function GET() {
   try {
     // 本地开发使用模拟数据
     if (process.env.NODE_ENV === "development") {
-      let db = getDb();
+      const db = getDb();
       return NextResponse.json({ mockData, db });
     }
 
