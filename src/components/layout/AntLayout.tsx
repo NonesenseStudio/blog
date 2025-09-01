@@ -6,8 +6,8 @@ import { ConfigProvider, theme, Layout as AntLayout, App } from "antd";
 import { StyleProvider } from "@ant-design/cssinjs";
 const { Footer } = AntLayout;
 import { useTheme } from "next-themes";
-import '@ant-design/v5-patch-for-react-19';
-
+import "@ant-design/v5-patch-for-react-19";
+import { AppGlobal } from "./AppGlobal";
 function Copyright() {
   const [year, setYear] = useState("");
 
@@ -55,6 +55,8 @@ export default function RootLayout({
             },
           }}
         >
+          <App>
+            <AppGlobal></AppGlobal>
             {showLayout ? (
               <AntLayout style={{ minHeight: "100vh" }}>
                 {children}
@@ -65,6 +67,7 @@ export default function RootLayout({
             ) : (
               children
             )}
+          </App>
         </ConfigProvider>
       </StyleProvider>
     </AntdRegistry>
