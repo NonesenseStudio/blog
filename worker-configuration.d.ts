@@ -10,7 +10,7 @@ declare namespace Cloudflare {
 		ASSETS: Fetcher;
 	}
 }
-interface Env extends Cloudflare.Env {}
+interface CloudflareEnv extends Cloudflare.Env {}
 type StringifyValues<EnvType extends Record<string, unknown>> = {
 	[Binding in keyof EnvType]: EnvType[Binding] extends string ? EnvType[Binding] : string;
 };
