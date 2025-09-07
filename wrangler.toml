@@ -18,14 +18,15 @@ binding = "WORKER_SELF_REFERENCE"
 # The service should match the "name" of your worker
 service = "blog"
 
-# R2 Buckets configuration (commented out)
-# [[r2_buckets]]
-# # Create a R2 binding with the binding name "NEXT_INC_CACHE_R2_BUCKET"
-# binding = "NEXT_INC_CACHE_R2_BUCKET"
-# bucket_name = "<BUCKET_NAME>"
+ [[r2_buckets]]
+ binding = "R2"
+ bucket_name = "blog"
 
 [[d1_databases]]
 binding = "DB"
 database_name = "blog"
 database_id = "79f6b956-7a4a-42df-a669-9d6708068958"
 migrations_dir = "./src/db/migrations"
+
+[vars]
+JWT_SECRET = "secret"

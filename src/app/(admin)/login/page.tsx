@@ -1,11 +1,12 @@
 "use client";
 
 import { Button, Form, Input, Card, Typography, message } from "antd";
-import { LockOutlined, UserOutlined } from "@ant-design/icons";
+import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import http from "@/lib/http";
 import { useEffect } from "react";
 import Cookies from "js-cookie";
+import { getEnv } from "@/lib/env";
 
 const { Title } = Typography;
 export default function LoginPage() {
@@ -40,8 +41,7 @@ export default function LoginPage() {
         email: values.email,
         password: values.password,
       });
-
-      const { token } = response.data;
+      const { token } = response.data || "";
 
       Cookies.set("token", token, { expires: 7 });
 
@@ -71,7 +71,7 @@ export default function LoginPage() {
             >
               <Input
                 prefix={
-                  <UserOutlined className="text-gray-400 dark:text-gray-300" />
+                  <MailOutlined className="text-gray-400 dark:text-gray-300" />
                 }
                 placeholder="邮箱"
                 size="large"

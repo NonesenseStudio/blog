@@ -1,57 +1,45 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getDb } from "@/db";
+import { users } from "@/db/schema";
+import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import { getDb } from "@/db"; // Drizzle 数据库实例
-import { users } from "@/db/schema";
-import { eq } from "drizzle-orm"; // 用户表结构
+import { z } from "zod";
+import { getEnv } from "@/lib/env";
 
-// 用户响应类型定义
-interface UserResponse {
-  id: string;
-  email: string;
-  name: string;
-}
-
-// 请求体类型定义
-interface LoginRequest {
-  email: string;
-  password: string;
-}
+// 定义输入验证schema
+const loginSchema = z.object({
+  email: z.email("请输入有效的邮箱地址"),
+  password: z.string().min(1, "密码不能为空"),
+});
 
 export async function POST(request: NextRequest) {
   try {
     const db = getDb();
-    const body: LoginRequest = await request.json();
-    const { email, password } = body;
+    const env: any = getEnv();
+    console.log(env);
+    // 解析请求体
+    const body = await request.json();
 
-    // 基本验证
-    if (!email || !password) {
-      return NextResponse.json(
-        { success: false, message: "邮箱和密码不能为空" },
-        { status: 400 },
-      );
-    }
+    // 验证输入
+    const validatedData = loginSchema.parse(body);
+    const { email, password } = validatedData;
 
-    // 使用 Drizzle 查询用户
-    const user = await db
-      .select({
-        id: users.id,
-        email: users.email,
-        name: users.name,
-        password: users.password,
-      })
+    // 查找用户
+    const existingUser = await db
+      .select()
       .from(users)
       .where(eq(users.email, email))
-      .limit(1)
-      .then((rows) => rows[0]);
+      .limit(1);
 
-    // 验证用户是否存在
-    if (!user) {
+    if (existingUser.length === 0) {
       return NextResponse.json(
         { success: false, message: "邮箱或密码不正确" },
         { status: 401 },
       );
     }
+
+    const user = existingUser[0];
 
     // 验证密码
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -62,49 +50,40 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 准备 JWT payload
-    const jwtPayload = {
-      userId: user.id,
-      email: user.email,
-    };
-
-    // 生成 JWT token
+    // 生成 JWT 令牌
     const token = jwt.sign(
-      jwtPayload,
-      process.env.JWT_SECRET!, // 确保在环境变量中设置
+      { userId: user.id, email: user.email },
+      env.JWT_SECRET,
       { expiresIn: "7d" },
     );
 
-    // 准备返回的用户信息（不包含密码）
-    const userResponse: UserResponse = {
-      id: user.id,
-      email: user.email,
-      name: user.name,
-    };
+    // 返回成功响应（不包含密码）
+    const { password: _, ...userWithoutPassword } = user;
 
-    // 创建响应并设置Cookie
-    const response = NextResponse.json(
-      {
-        success: true,
-        user: userResponse,
-      },
-      { status: 200 },
-    );
-
-    // 设置HttpOnly Cookie
-    response.cookies.set("token", token, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      maxAge: 60 * 60 * 24 * 7, // 一周有效期
-      path: "/",
-      sameSite: "strict",
+    return NextResponse.json({
+      success: true,
+      message: "登录成功",
+      token,
+      user: userWithoutPassword,
     });
-
-    return response;
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      // 处理验证错误
+      return NextResponse.json(
+        {
+          success: false,
+          message: "输入数据验证失败",
+          errors: error.issues.map((issue) => ({
+            field: issue.path.join("."),
+            message: issue.message,
+          })),
+        },
+        { status: 400 },
+      );
+    }
     console.error("登录错误:", error);
     return NextResponse.json(
-      { success: false, message: "服务器错误，请稍后重试" },
+      { success: false, message: "服务器内部错误" },
       { status: 500 },
     );
   }
