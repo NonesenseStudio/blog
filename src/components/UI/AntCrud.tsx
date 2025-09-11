@@ -173,7 +173,7 @@ const AntCrud = <T extends { id?: string | number }>({
       }
 
       const endpoint = apiConfig.create || defaultApiEndpoints.create;
-      let url =
+      const url =
         typeof endpoint === "function" ? await endpoint(values) : endpoint;
 
       try {
@@ -202,7 +202,7 @@ const AntCrud = <T extends { id?: string | number }>({
       }
 
       const endpoint = apiConfig.update || defaultApiEndpoints.update(id);
-      let url =
+      const url =
         typeof endpoint === "function" ? await endpoint(id, values) : endpoint;
 
       try {
@@ -231,7 +231,7 @@ const AntCrud = <T extends { id?: string | number }>({
       }
 
       const endpoint = apiConfig.delete || defaultApiEndpoints.delete(id);
-      let url = typeof endpoint === "function" ? await endpoint(id) : endpoint;
+      const url = typeof endpoint === "function" ? await endpoint(id) : endpoint;
 
       try {
         const response = await fetch(url, {
@@ -255,7 +255,7 @@ const AntCrud = <T extends { id?: string | number }>({
       }
 
       const endpoint = apiConfig.get || defaultApiEndpoints.get(id);
-      let url = typeof endpoint === "function" ? await endpoint(id) : endpoint;
+      const url = typeof endpoint === "function" ? await endpoint(id) : endpoint;
 
       try {
         const response = await fetch(url);
