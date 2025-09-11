@@ -41,11 +41,11 @@ export default function LoginPage() {
         email: values.email,
         password: values.password,
       });
-      const { token } = response.data || "";
+      // const { token } = response.data || "";
 
-      Cookies.set("token", token, { expires: 7 });
+      // Cookies.set("token", token, { expires: 7 });
 
-      router.push("/dashboard");
+      // router.push("/dashboard");
     } catch (error) {
       messageApi.error("登录失败，请检查邮箱和密码是否正确");
       console.error("登录失败:", error);

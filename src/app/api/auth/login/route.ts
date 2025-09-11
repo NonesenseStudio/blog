@@ -17,7 +17,6 @@ export async function POST(request: NextRequest) {
   try {
     const db = getDb();
     const env: any = getEnv();
-    console.log(env);
     // 解析请求体
     const body = await request.json();
 
