@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import {
   Table,
   Button,
@@ -25,7 +25,7 @@ import {
   DeleteOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import type { TableProps, FormItemProps } from "antd";
+import type { TableProps } from "antd";
 import { ColumnsType } from "antd/es/table";
 
 // 类型定义
@@ -93,6 +93,10 @@ const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
   });
   const [messageApi, contextHolder] = message.useMessage();
 
+  // 使用 ref 存储分页状态，避免依赖问题
+  const paginationRef = useRef(pagination);
+  paginationRef.current = pagination;
+
   // 渲染表单字段
   const renderFormField = (field: FieldConfig) => {
     const commonProps = {
@@ -122,8 +126,8 @@ const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
       try {
         const queryParams = {
           query: true,
-          page: params.page || pagination.current,
-          pageSize: params.pageSize || pagination.pageSize,
+          page: params.page || paginationRef.current.current,
+          pageSize: params.pageSize || paginationRef.current.pageSize,
           ...params,
           ...(config.defaultSort && {
             sortBy: config.defaultSort.field,
@@ -156,22 +160,24 @@ const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
         setLoading(false);
       }
     },
-    [config.api.endpoint, config.defaultSort, messageApi], // 移除 pagination 依赖
+    [config.api.endpoint, config.defaultSort, messageApi],
   );
 
   // 初始化加载数据
   useEffect(() => {
     fetchData().then((r) => r);
-  }, []);
+  }, [fetchData]);
 
   // 处理搜索
   const handleSearch = (values: any) => {
+    setPagination((prev) => ({ ...prev, current: 1 })); // 重置到第一页
     fetchData(values);
   };
 
   // 重置搜索
   const handleReset = () => {
     searchForm.resetFields();
+    setPagination((prev) => ({ ...prev, current: 1 })); // 重置到第一页
     fetchData();
   };
 
@@ -204,7 +210,13 @@ const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
       }
 
       messageApi.success("删除成功");
-      await fetchData();
+      // 如果当前页只有一条数据，删除后返回上一页
+      const newPage =
+        data.length === 1 && pagination.current > 1
+          ? pagination.current - 1
+          : pagination.current;
+      setPagination((prev) => ({ ...prev, current: newPage }));
+      await fetchData({ page: newPage });
     } catch (error) {
       messageApi.error("删除失败");
       console.error("Error deleting record:", error);
@@ -241,11 +253,12 @@ const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
 
   // 处理分页变化
   const handleTableChange: TableProps<any>["onChange"] = (pag) => {
-    setPagination({
-      total: pagination.total,
+    const newPagination = {
+      total: paginationRef.current.total,
       current: pag.current!,
       pageSize: pag.pageSize!,
-    });
+    };
+    setPagination(newPagination);
     fetchData({
       page: pag.current,
       pageSize: pag.pageSize,
@@ -377,14 +390,14 @@ const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
           }}
           footer={null}
           width={600}
-          destroyOnHidden
+          destroyOnClose
           forceRender
         >
           <Form
             form={form}
             onFinish={handleSubmit}
             layout="vertical"
-            preserve={false} // 关闭时保留表单数据
+            preserve={false}
           >
             {config.formFields.map((field) => (
               <Form.Item

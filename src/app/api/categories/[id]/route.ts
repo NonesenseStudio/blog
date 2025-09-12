@@ -16,13 +16,14 @@ const db = getDb();
 // 获取单个分类
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const category = await db
       .select()
       .from(categories)
-      .where(eq(categories.id, params.id))
+      .where(eq(categories.id, id))
       .limit(1);
 
     if (category.length === 0) {
@@ -38,9 +39,10 @@ export async function GET(
 // 更新分类
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     const body = await request.json();
     const validatedData = updateCategorySchema.parse(body);
 
@@ -48,7 +50,7 @@ export async function PUT(
     const existingCategory = await db
       .select()
       .from(categories)
-      .where(eq(categories.id, params.id))
+      .where(eq(categories.id, id))
       .limit(1);
 
     if (existingCategory.length === 0) {
@@ -63,7 +65,7 @@ export async function PUT(
         .where(eq(categories.slug, validatedData.slug))
         .limit(1);
 
-      if (slugExists.length > 0 && slugExists[0].id !== params.id) {
+      if (slugExists.length > 0 && slugExists[0].id !== id) {
         return NextResponse.json({ error: "该slug已被使用" }, { status: 400 });
       }
     }
@@ -71,7 +73,7 @@ export async function PUT(
     const updatedCategory = await db
       .update(categories)
       .set(validatedData)
-      .where(eq(categories.id, params.id))
+      .where(eq(categories.id, id))
       .returning();
 
     return NextResponse.json(updatedCategory[0]);
@@ -95,14 +97,15 @@ export async function PUT(
 // 删除分类
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params;
     // 检查分类是否存在
     const existingCategory = await db
       .select()
       .from(categories)
-      .where(eq(categories.id, params.id))
+      .where(eq(categories.id, id))
       .limit(1);
 
     if (existingCategory.length === 0) {
@@ -113,7 +116,7 @@ export async function DELETE(
     const hasChildren = await db
       .select()
       .from(categories)
-      .where(eq(categories.parentId, params.id))
+      .where(eq(categories.parentId, id))
       .limit(1);
 
     if (hasChildren.length > 0) {
@@ -123,7 +126,7 @@ export async function DELETE(
       );
     }
 
-    await db.delete(categories).where(eq(categories.id, params.id));
+    await db.delete(categories).where(eq(categories.id, id));
 
     return NextResponse.json({ message: "删除成功" });
   } catch (error) {
