@@ -26,7 +26,7 @@ service = "blog"
 binding = "DB"
 database_name = "blog"
 database_id = "79f6b956-7a4a-42df-a669-9d6708068958"
-migrations_dir = "./src/db/migrations"
+migrations_dir = "./src/lib/db/migrations"
 
 [vars]
 JWT_SECRET = "secret"

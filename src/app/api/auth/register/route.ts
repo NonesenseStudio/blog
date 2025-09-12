@@ -1,7 +1,6 @@
-// app/api/auth/register/route.ts
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/db"; // 假设这是你的数据库连接实例
-import { users } from "@/db/schema"; // 用户表schema
+import { getDb } from "@/lib/db"; // 假设这是你的数据库连接实例
+import { users } from "@/lib/db/schema"; // 用户表schema
 import { eq } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { z, ZodError } from "zod";

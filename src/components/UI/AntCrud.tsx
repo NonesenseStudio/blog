@@ -1,7 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import "@ant-design/v5-patch-for-react-19";
+import React, { useState, useEffect, useCallback } from "react";
 import {
   Table,
   Button,
@@ -9,15 +8,15 @@ import {
   Modal,
   Form,
   Input,
-  Select,
-  DatePicker,
   message,
   Card,
   Row,
   Col,
+  Popconfirm,
+  Select,
+  DatePicker,
   InputNumber,
   Switch,
-  Popconfirm,
 } from "antd";
 import {
   SearchOutlined,
@@ -26,341 +25,188 @@ import {
   DeleteOutlined,
   ReloadOutlined,
 } from "@ant-design/icons";
-import type { TableProps, FormProps } from "antd";
+import type { TableProps, FormItemProps } from "antd";
+import { ColumnsType } from "antd/es/table";
 
 // 类型定义
-interface ApiResponse<T> {
-  data: T[];
-  total?: number;
+interface FieldConfig {
+  name: string;
+  label: string;
+  type: "text" | "textarea" | "number" | "select" | "date" | "switch";
+  required?: boolean;
+  options?: { label: string; value: any }[];
+  placeholder?: string;
+  rules?: any[];
+}
+
+interface ColumnConfig {
+  title: string;
+  dataIndex: string;
+  key: string;
+  type?: "text" | "date" | "number";
+  render?: (value: any, record: any) => React.ReactNode;
 }
 
 interface ApiConfig {
-  list?: string | ((params: any) => Promise<any>);
-  create?: string | ((values: any) => Promise<any>);
-  update?: string | ((id: string | number, values: any) => Promise<any>);
-  delete?: string | ((id: string | number) => Promise<any>);
-  get?: string | ((id: string | number) => Promise<any>);
+  endpoint: string;
+  idField?: string;
 }
 
-interface GenericCrudProps<T> {
-  // 资源名称（用于自动生成API端点）
-  resourceName: string;
-
-  // API配置（可覆盖默认行为）
-  apiConfig?: ApiConfig;
-
-  // 数据相关
-  dataSource?: T[];
-  loading?: boolean;
-  total?: number;
-
-  // 列配置
-  columns: any[];
-
-  // 搜索表单配置
-  searchFields?: any[];
-
-  // 编辑表单配置
-  formFields?: any[];
-
-  // 自定义操作
-  customActions?: React.ReactNode;
-
-  // 分页配置
-  pageSize?: number;
-  showPagination?: boolean;
-
-  // 事件钩子（允许完全自定义API操作）
-  onFetch?: (params: any) => Promise<T[] | { data: T[]; total: number }>;
-  onCreate?: (values: Partial<T>) => Promise<T>;
-  onUpdate?: (id: string | number, values: Partial<T>) => Promise<T>;
-  onDelete?: (id: string | number) => Promise<void>;
-  onGet?: (id: string | number) => Promise<T>;
+interface CrudConfig {
+  title: string;
+  api: {
+    endpoint: string;
+    idField?: string;
+  };
+  columns: ColumnConfig[];
+  searchFields?: FieldConfig[];
+  formFields: FieldConfig[];
+  defaultSort?: {
+    field: string;
+    order: "asc" | "desc";
+  };
 }
 
-const AntCrud = <T extends { id?: string | number }>({
-  resourceName,
-  apiConfig = {},
-  dataSource: externalDataSource,
-  loading: externalLoading = false,
-  total: externalTotal = 0,
-  columns,
-  searchFields = [],
-  formFields = [],
-  customActions,
-  pageSize = 10,
-  showPagination = true,
-  onFetch,
-  onCreate,
-  onUpdate,
-  onDelete,
-  onGet,
-}: GenericCrudProps<T>) => {
+interface PaginationData {
+  page: number;
+  pageSize: number;
+  total: number;
+  totalPages: number;
+}
+
+interface ApiResponse<T> {
+  data: T[];
+  pagination: PaginationData;
+}
+
+const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
+  const [form] = Form.useForm();
   const [searchForm] = Form.useForm();
-  const [editForm] = Form.useForm();
   const [modalVisible, setModalVisible] = useState(false);
-  const [editingRecord, setEditingRecord] = useState<T | null>(null);
-  const [searchParams, setSearchParams] = useState<Record<string, any>>({});
+  const [editingRecord, setEditingRecord] = useState<any>(null);
+  const [data, setData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
   const [pagination, setPagination] = useState({
     current: 1,
-    pageSize,
+    pageSize: 10,
+    total: 0,
   });
-  const [internalData, setInternalData] = useState<T[]>([]);
-  const [internalTotal, setInternalTotal] = useState(0);
-  const [internalLoading, setInternalLoading] = useState(false);
+  const [messageApi, contextHolder] = message.useMessage();
 
-  // 判断是否使用内部状态管理
-  const useInternalState = !externalDataSource && !onFetch;
-  const dataSource = useInternalState ? internalData : externalDataSource || [];
-  const loading = useInternalState ? internalLoading : externalLoading;
-  const total = useInternalState ? internalTotal : externalTotal || 0;
+  // 渲染表单字段
+  const renderFormField = (field: FieldConfig) => {
+    const commonProps = {
+      placeholder: field.placeholder,
+    };
 
-  // 默认API端点生成
-  const defaultApiEndpoints = {
-    list: `/api/${resourceName}`,
-    create: `/api/${resourceName}`,
-    update: (id: string | number) => `/api/${resourceName}/${id}`,
-    delete: (id: string | number) => `/api/${resourceName}/${id}`,
-    get: (id: string | number) => `/api/${resourceName}/${id}`,
+    switch (field.type) {
+      case "textarea":
+        return <Input.TextArea {...commonProps} />;
+      case "number":
+        return <InputNumber {...commonProps} style={{ width: "100%" }} />;
+      case "select":
+        return <Select {...commonProps} options={field.options} />;
+      case "date":
+        return <DatePicker {...commonProps} style={{ width: "100%" }} />;
+      case "switch":
+        return <Switch />;
+      default:
+        return <Input {...commonProps} />;
+    }
   };
 
-  // API调用方法
-  const apiCall = {
-    // 获取列表
-    fetch: async (params: any = {}): Promise<T[] | ApiResponse<T>> => {
-      if (onFetch) {
-        return onFetch({
+  // 获取列表数据
+  const fetchData = useCallback(
+    async (params: any = {}) => {
+      setLoading(true);
+      try {
+        const queryParams = {
+          query: true,
+          page: params.page || pagination.current,
+          pageSize: params.pageSize || pagination.pageSize,
           ...params,
-          page: pagination.current,
-          pageSize: pagination.pageSize,
-        });
-      }
-
-      const endpoint = apiConfig.list || defaultApiEndpoints.list;
-      let url = endpoint as string;
-      let queryParams = { ...params };
-      // 处理分页参数
-      if (showPagination) {
-        queryParams = {
-          ...queryParams,
-          page: pagination.current,
-          pageSize: pagination.pageSize,
+          ...(config.defaultSort && {
+            sortBy: config.defaultSort.field,
+            sortOrder: config.defaultSort.order,
+          }),
         };
-      }
 
-      // 构建查询字符串
-      const queryString = new URLSearchParams(queryParams).toString();
-      if (queryString) {
-        url += `?${queryString}`;
-      }
-
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      } catch (error) {
-        console.error("Fetch error:", error);
-        throw error;
-      }
-    },
-
-    // 创建记录
-    create: async (values: Partial<T>) => {
-      if (onCreate) {
-        return onCreate(values);
-      }
-
-      const endpoint = apiConfig.create || defaultApiEndpoints.create;
-      const url =
-        typeof endpoint === "function" ? await endpoint(values) : endpoint;
-
-      try {
-        const response = await fetch(url, {
+        const response = await fetch(config.api.endpoint, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(values),
+          body: JSON.stringify(queryParams),
         });
 
         if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error("请求失败");
         }
-        return response.json();
+
+        const result: ApiResponse<any> = await response.json();
+        setData(result.data);
+        setPagination((prev) => ({
+          ...prev,
+          total: result.pagination.total,
+        }));
       } catch (error) {
-        console.error("Create error:", error);
-        throw error;
+        messageApi.error("获取数据失败");
+        console.error("Error fetching data:", error);
+      } finally {
+        setLoading(false);
       }
     },
+    [config.api.endpoint, config.defaultSort, messageApi], // 移除 pagination 依赖
+  );
 
-    // 更新记录
-    update: async (id: string | number, values: Partial<T>) => {
-      if (onUpdate) {
-        return onUpdate(id, values);
-      }
-
-      const endpoint = apiConfig.update || defaultApiEndpoints.update(id);
-      const url =
-        typeof endpoint === "function" ? await endpoint(id, values) : endpoint;
-
-      try {
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(values),
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      } catch (error) {
-        console.error("Update error:", error);
-        throw error;
-      }
-    },
-
-    // 删除记录
-    delete: async (id: string | number) => {
-      if (onDelete) {
-        return onDelete(id);
-      }
-
-      const endpoint = apiConfig.delete || defaultApiEndpoints.delete(id);
-      const url = typeof endpoint === "function" ? await endpoint(id) : endpoint;
-
-      try {
-        const response = await fetch(url, {
-          method: "DELETE",
-        });
-
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      } catch (error) {
-        console.error("Delete error:", error);
-        throw error;
-      }
-    },
-
-    // 获取单条记录
-    get: async (id: string | number): Promise<T> => {
-      if (onGet) {
-        return onGet(id);
-      }
-
-      const endpoint = apiConfig.get || defaultApiEndpoints.get(id);
-      const url = typeof endpoint === "function" ? await endpoint(id) : endpoint;
-
-      try {
-        const response = await fetch(url);
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json() as Promise<T>;
-      } catch (error) {
-        console.error("Get error:", error);
-        throw error;
-      }
-    },
-  };
-
-  // 获取数据
+  // 初始化加载数据
   useEffect(() => {
-    if (useInternalState) {
-      fetchData().catch((error) => {
-        console.error("Failed to fetch data:", error);
-        message.error("获取数据失败");
-      });
-    }
-  }, [pagination, searchParams, useInternalState]);
-
-  const fetchData = async () => {
-    setInternalLoading(true);
-    try {
-      const result = await apiCall.fetch(searchParams);
-
-      if (useInternalState) {
-        if (Array.isArray(result)) {
-          setInternalData(result);
-          setInternalTotal(result.length);
-        } else {
-          // 现在 TypeScript 知道 result 有 data 属性
-          const apiResponse = result as ApiResponse<T>;
-          setInternalData(apiResponse.data);
-          setInternalTotal(apiResponse.total || apiResponse.data.length);
-        }
-      }
-    } catch (error) {
-      message.error("获取数据失败");
-      console.error("Error fetching data:", error);
-    } finally {
-      setInternalLoading(false);
-    }
-  };
+    fetchData().then((r) => r);
+  }, []);
 
   // 处理搜索
   const handleSearch = (values: any) => {
-    setSearchParams(values);
-    setPagination({ ...pagination, current: 1 });
+    fetchData(values);
   };
 
   // 重置搜索
   const handleReset = () => {
     searchForm.resetFields();
-    setSearchParams({});
-    setPagination({ ...pagination, current: 1 });
+    fetchData();
   };
 
   // 创建记录
   const handleCreate = () => {
     setEditingRecord(null);
-    editForm.resetFields();
+    form.resetFields();
     setModalVisible(true);
   };
 
   // 编辑记录
-  const handleEdit = async (record: T) => {
-    try {
-      setInternalLoading(true);
-      let fullRecord: T;
-      if (record.id) {
-        fullRecord = await apiCall.get(record.id);
-      } else {
-        fullRecord = record;
-      }
-      setEditingRecord(fullRecord);
-      editForm.setFieldsValue(fullRecord);
-      setModalVisible(true);
-    } catch (error) {
-      message.error("获取详情失败");
-      console.error("Error fetching detail:", error);
-    } finally {
-      setInternalLoading(false);
-    }
+  const handleEdit = (record: any) => {
+    setEditingRecord(record);
+    form.setFieldsValue(record);
+    setModalVisible(true);
   };
 
   // 删除记录
-  const handleDelete = async (record: T) => {
-    if (!record.id) {
-      message.error("记录ID不存在");
-      return;
-    }
-
+  const handleDelete = async (record: any) => {
     try {
-      await apiCall.delete(record.id);
-      message.success("删除成功");
-      fetchData().catch((error) => {
-        console.error("Failed to fetch data after delete:", error);
-        message.error("刷新数据失败");
-      }); // 刷新数据
+      const response = await fetch(
+        `${config.api.endpoint}/${record[config.api.idField || "id"]}`,
+        {
+          method: "DELETE",
+        },
+      );
+
+      if (!response.ok) {
+        throw new Error("删除失败");
+      }
+
+      messageApi.success("删除成功");
+      await fetchData();
     } catch (error) {
-      message.error("删除失败");
+      messageApi.error("删除失败");
       console.error("Error deleting record:", error);
     }
   };
@@ -368,39 +214,51 @@ const AntCrud = <T extends { id?: string | number }>({
   // 提交表单
   const handleSubmit = async (values: any) => {
     try {
-      if (editingRecord && editingRecord.id) {
-        await apiCall.update(editingRecord.id, values);
-        message.success("更新成功");
-      } else {
-        await apiCall.create(values);
-        message.success("创建成功");
+      const url = editingRecord
+        ? `${config.api.endpoint}/${editingRecord[config.api.idField || "id"]}`
+        : config.api.endpoint;
+
+      const response = await fetch(url, {
+        method: editingRecord ? "PUT" : "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(values),
+      });
+
+      if (!response.ok) {
+        throw new Error(editingRecord ? "更新失败" : "创建失败");
       }
+
+      messageApi.success(editingRecord ? "更新成功" : "创建成功");
       setModalVisible(false);
-      fetchData().catch((error) => {
-        console.error("Failed to fetch data after submit:", error);
-        message.error("刷新数据失败");
-      }); // 刷新数据
+      await fetchData();
     } catch (error) {
-      message.error(editingRecord ? "更新失败" : "创建失败");
+      messageApi.error(editingRecord ? "更新失败" : "创建失败");
       console.error("Error submitting form:", error);
     }
   };
 
   // 处理分页变化
-  const handleTableChange: TableProps<T>["onChange"] = (pag) => {
+  const handleTableChange: TableProps<any>["onChange"] = (pag) => {
     setPagination({
+      total: pagination.total,
       current: pag.current!,
       pageSize: pag.pageSize!,
     });
+    fetchData({
+      page: pag.current,
+      pageSize: pag.pageSize,
+    }).then((r) => r);
   };
 
   // 添加操作列
-  const actionColumn = {
+  const actionColumn: ColumnsType<any>[0] = {
     title: "操作",
     key: "actions",
-    fixed: "right",
+    fixed: "right" as const,
     width: 120,
-    render: (_: any, record: T) => (
+    render: (_: any, record: any) => (
       <Space size="middle">
         <Button
           type="link"
@@ -424,114 +282,135 @@ const AntCrud = <T extends { id?: string | number }>({
   };
 
   // 表格列配置
-  const tableColumns = [...columns, actionColumn];
+  const tableColumns: ColumnsType<any> = [
+    ...config.columns.map((col) => ({
+      ...col,
+      render:
+        col.render ||
+        ((value: any) => {
+          if (col.type === "date") {
+            return value ? new Date(value).toLocaleString() : "-";
+          }
+          return value ?? "-";
+        }),
+    })),
+    actionColumn,
+  ];
 
   return (
-    <Card>
-      {/* 搜索栏 */}
-      {searchFields.length > 0 && (
-        <Form
-          form={searchForm}
-          onFinish={handleSearch}
-          layout="inline"
-          style={{ marginBottom: 16 }}
-        >
-          <Row gutter={16} style={{ width: "100%" }}>
-            {searchFields.map((field) => (
-              <Col key={field.name} span={8}>
-                <Form.Item name={field.name} label={field.label}>
-                  {field.component}
-                </Form.Item>
+    <>
+      {contextHolder}
+      <Card>
+        {/* 搜索栏 */}
+        {config.searchFields && config.searchFields.length > 0 && (
+          <Form
+            form={searchForm}
+            onFinish={handleSearch}
+            layout="inline"
+            style={{ marginBottom: 16 }}
+          >
+            <Row gutter={16} style={{ width: "100%" }}>
+              {config.searchFields.map((field) => (
+                <Col key={field.name} span={8}>
+                  <Form.Item
+                    name={field.name}
+                    label={field.label}
+                    rules={field.rules}
+                  >
+                    {renderFormField(field)}
+                  </Form.Item>
+                </Col>
+              ))}
+              <Col span={8}>
+                <Space>
+                  <Button
+                    type="primary"
+                    htmlType="submit"
+                    icon={<SearchOutlined />}
+                  >
+                    搜索
+                  </Button>
+                  <Button onClick={handleReset} icon={<ReloadOutlined />}>
+                    重置
+                  </Button>
+                </Space>
               </Col>
-            ))}
-            <Col span={8}>
-              <Space>
-                <Button
-                  type="primary"
-                  htmlType="submit"
-                  icon={<SearchOutlined />}
-                >
-                  搜索
-                </Button>
-                <Button onClick={handleReset} icon={<ReloadOutlined />}>
-                  重置
-                </Button>
-              </Space>
-            </Col>
-          </Row>
-        </Form>
-      )}
-
-      {/* 操作按钮 */}
-      <div style={{ marginBottom: 16 }}>
-        <Space>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-            新建
-          </Button>
-          {customActions}
-        </Space>
-      </div>
-
-      {/* 数据表格 */}
-      <Table
-        columns={tableColumns}
-        dataSource={dataSource}
-        rowKey="id"
-        loading={loading}
-        onChange={handleTableChange}
-        pagination={
-          showPagination
-            ? {
-                current: pagination.current,
-                pageSize: pagination.pageSize,
-                total,
-                showSizeChanger: true,
-                showQuickJumper: true,
-                showTotal: (total, range) =>
-                  `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
-              }
-            : false
-        }
-      />
-
-      {/* 编辑模态框 */}
-      <Modal
-        title={editingRecord ? "编辑记录" : "新建记录"}
-        open={modalVisible}
-        onCancel={() => setModalVisible(false)}
-        footer={null}
-        width={600}
-        destroyOnHidden
-        forceRender
-      >
-        <Form
-          form={editForm}
-          onFinish={handleSubmit}
-          layout="vertical"
-          preserve={false}
-        >
-          {formFields.map((field) => (
-            <Form.Item
-              key={field.name}
-              name={field.name}
-              label={field.label}
-              rules={field.rules}
-              valuePropName={field.valuePropName || "value"}
+            </Row>
+          </Form>
+        )}
+        {/* 操作按钮 */}
+        <div style={{ marginBottom: 16 }}>
+          <Space>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreate}
             >
-              {field.component}
+              新建{config.title}
+            </Button>
+          </Space>
+        </div>
+        {/* 数据表格 */}
+        <Table
+          columns={tableColumns}
+          dataSource={data}
+          rowKey={config.api.idField || "id"}
+          loading={loading}
+          onChange={handleTableChange}
+          pagination={{
+            current: pagination.current,
+            pageSize: pagination.pageSize,
+            total: pagination.total,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total, range) =>
+              `第 ${range[0]}-${range[1]} 条，共 ${total} 条`,
+          }}
+        />
+        {/* 编辑模态框 */}
+        <Modal
+          title={editingRecord ? `编辑${config.title}` : `新建${config.title}`}
+          open={modalVisible}
+          onCancel={() => {
+            setModalVisible(false);
+            form.resetFields();
+          }}
+          footer={null}
+          width={600}
+          destroyOnHidden
+          forceRender
+        >
+          <Form
+            form={form}
+            onFinish={handleSubmit}
+            layout="vertical"
+            preserve={false} // 关闭时保留表单数据
+          >
+            {config.formFields.map((field) => (
+              <Form.Item
+                key={field.name}
+                name={field.name}
+                label={field.label}
+                rules={[
+                  { required: field.required, message: `请输入${field.label}` },
+                  ...(field.rules || []),
+                ]}
+              >
+                {renderFormField(field)}
+              </Form.Item>
+            ))}
+            <Form.Item>
+              <Space>
+                <Button type="primary" htmlType="submit">
+                  {editingRecord ? "更新" : "创建"}
+                </Button>
+                <Button onClick={() => setModalVisible(false)}>取消</Button>
+              </Space>
             </Form.Item>
-          ))}
-          <Form.Item>
-            <Space>
-              <Button type="primary" htmlType="submit">
-                {editingRecord ? "更新" : "创建"}
-              </Button>
-              <Button onClick={() => setModalVisible(false)}>取消</Button>
-            </Space>
-          </Form.Item>
-        </Form>
-      </Modal>
-    </Card>
+          </Form>
+        </Modal>
+      </Card>
+    </>
   );
 };
 

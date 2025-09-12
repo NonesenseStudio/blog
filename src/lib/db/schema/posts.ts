@@ -1,5 +1,5 @@
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
-import { baseColumns } from "@/db/schema/core";
+import { baseColumns } from "@/lib/db/schema/core";
 
 export const posts = sqliteTable("posts", {
   ...baseColumns,

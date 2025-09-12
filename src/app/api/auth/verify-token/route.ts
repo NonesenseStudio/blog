@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import jwt from "jsonwebtoken";
-import { getDb } from "@/db"; // Drizzle 数据库实例
-import { users } from "@/db/schema";
+import { getDb } from "@/lib/db"; // Drizzle 数据库实例
+import { users } from "@/lib/db/schema";
 import { eq } from "drizzle-orm"; // 用户表结构
 
 // 用户响应类型定义

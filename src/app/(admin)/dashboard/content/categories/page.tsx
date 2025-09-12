@@ -1,86 +1,82 @@
-// pages/users/index.tsx
 import React from "react";
-import { Input, Select } from "antd";
 import AntCrud from "@/components/UI/AntCrud";
 
 const UsersPage = () => {
-  // 定义表格列
-  const columns = [
-    {
-      title: "姓名",
-      dataIndex: "name",
-      key: "name",
-    },
-    {
-      title: "邮箱",
-      dataIndex: "email",
-      key: "email",
-    },
-    {
-      title: "角色",
-      dataIndex: "role",
-      key: "role",
-    },
-  ];
+  interface ColumnConfig {
+    title: string;
+    dataIndex: string;
+    key: string;
+    type?: "text" | "date" | "number";
+    render?: (value: any, record: any) => React.ReactNode;
+  }
 
-  // 搜索字段配置
-  const searchFields = [
-    {
-      name: "name",
-      label: "姓名",
-      component: <Input placeholder="请输入姓名" />,
-    },
-    {
-      name: "role",
-      label: "角色",
-      component: (
-        <Select placeholder="请选择角色">
-          <Select.Option value="admin">管理员</Select.Option>
-          <Select.Option value="user">普通用户</Select.Option>
-        </Select>
-      ),
-    },
-  ];
+  interface FieldConfig {
+    name: string;
+    label: string;
+    type: "text" | "textarea" | "number" | "select" | "date" | "switch";
+    required?: boolean;
+    options?: { label: string; value: any }[];
+    placeholder?: string;
+    rules?: any[];
+  }
 
-  // 表单字段配置
-  const formFields = [
-    {
-      name: "name",
-      label: "姓名",
-      rules: [{ required: true, message: "请输入姓名" }],
-      component: <Input placeholder="请输入姓名" />,
-    },
-    {
-      name: "email",
-      label: "邮箱",
-      rules: [
-        { required: true, message: "请输入邮箱" },
-        { type: "email", message: "邮箱格式不正确" },
-      ],
-      component: <Input placeholder="请输入邮箱" />,
-    },
-    {
-      name: "role",
-      label: "角色",
-      rules: [{ required: true, message: "请选择角色" }],
-      component: (
-        <Select placeholder="请选择角色">
-          <Select.Option value="admin">管理员</Select.Option>
-          <Select.Option value="user">普通用户</Select.Option>
-        </Select>
-      ),
-    },
-  ];
+  interface CrudConfig {
+    title: string;
+    api: {
+      endpoint: string;
+      idField?: string;
+    };
+    columns: ColumnConfig[];
+    searchFields?: FieldConfig[];
+    formFields: FieldConfig[];
+    defaultSort?: {
+      field: string;
+      order: "asc" | "desc";
+    };
+  }
 
-  return (
-    <AntCrud
-      resourceName="categories"
-      columns={columns}
-      searchFields={searchFields}
-      formFields={formFields}
-      pageSize={10}
-    />
-  );
+  // UsersPage.tsx 中的配置
+  const categoryConfig: CrudConfig = {
+    title: "分类",
+    api: {
+      endpoint: "/api/categories",
+      idField: "id",
+    },
+    columns: [
+      { title: "名称", dataIndex: "name", key: "name", type: "text" },
+      { title: "Slug", dataIndex: "slug", key: "slug", type: "text" },
+      {
+        title: "描述",
+        dataIndex: "description",
+        key: "description",
+        type: "text",
+      },
+      {
+        title: "创建时间",
+        dataIndex: "createdAt",
+        key: "createdAt",
+        type: "date",
+      },
+    ],
+    searchFields: [
+      {
+        name: "keyword",
+        label: "关键词",
+        type: "text",
+        placeholder: "请输入关键词",
+      },
+    ],
+    formFields: [
+      { name: "name", label: "名称", type: "text", required: true },
+      { name: "slug", label: "Slug", type: "text", required: true },
+      { name: "description", label: "描述", type: "textarea" },
+    ],
+    defaultSort: {
+      field: "createdAt",
+      order: "desc",
+    },
+  };
+  return <AntCrud config={categoryConfig} />;
 };
 
 export default UsersPage;
