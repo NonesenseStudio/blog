@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import {  getDbAsync } from "@/lib/db";
 import { categories } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { z, ZodError } from "zod";
@@ -12,7 +12,6 @@ const updateCategorySchema = z.object({
   parentId: z.string().optional(),
 });
 
-const db = getDb();
 // 获取单个分类
 export async function GET(
   request: NextRequest,
@@ -20,6 +19,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
+    const db = await getDbAsync();
     const category = await db
       .select()
       .from(categories)
@@ -45,7 +45,7 @@ export async function PUT(
     const { id } = await params;
     const body = await request.json();
     const validatedData = updateCategorySchema.parse(body);
-
+    const db = await getDbAsync();
     // 检查分类是否存在
     const existingCategory = await db
       .select()
@@ -101,6 +101,7 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
+    const db = await getDbAsync();
     // 检查分类是否存在
     const existingCategory = await db
       .select()

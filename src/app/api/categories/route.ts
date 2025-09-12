@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getDb } from "@/lib/db";
+import {  getDbAsync } from "@/lib/db";
 import { categories } from "@/lib/db/schema";
 import { eq, or, ilike, and, count, desc, asc } from "drizzle-orm";
 import { z, ZodError } from "zod";
@@ -29,11 +29,10 @@ const queryCategoriesSchema = z.object({
 type CreateCategoryRequest = z.infer<typeof createCategorySchema>;
 type QueryCategoriesRequest = z.infer<typeof queryCategoriesSchema>;
 type CategoryRequest = CreateCategoryRequest | QueryCategoriesRequest;
-
-const db = getDb();
 // 获取所有分类
 export async function GET() {
   try {
+    const db = await getDbAsync();
     const allCategories = await db.select().from(categories);
     return NextResponse.json(allCategories);
   } catch (error) {
@@ -45,7 +44,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = (await request.json()) as CategoryRequest;
-
+    const db = await getDbAsync();
     // 判断是创建分类还是查询分类
     if ("query" in body && body.query) {
       // 查询分类
