@@ -23,6 +23,5 @@ export const metadata: Metadata = {
 };
 export default async function AboutPage() {
   const markdownContent = await getMarkdownContent();
-  // return <AboutClient markdownContent={markdownContent} />;
-  return <div>About page is coming soon.</div>;
+  return <AboutClient markdownContent={markdownContent} />;
 }

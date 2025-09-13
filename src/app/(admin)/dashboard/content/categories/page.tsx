@@ -1,7 +1,7 @@
 import React from "react";
 import AntCrud from "@/components/UI/AntCrud";
 
-const UsersPage = () => {
+const CategoryPage = () => {
   interface ColumnConfig {
     title: string;
     dataIndex: string;
@@ -79,4 +79,4 @@ const UsersPage = () => {
   return <AntCrud config={categoryConfig} />;
 };
 
-export default UsersPage;
+export default CategoryPage;

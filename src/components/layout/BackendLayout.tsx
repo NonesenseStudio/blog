@@ -128,7 +128,7 @@ export default function RootLayout({
   };
 
   return (
-    <AntLayout style={{ minHeight: "100vh" }}>
+    <AntLayout style={{ minHeight: "100vh", overflow: "hidden" }}>
       <Sider
         trigger={null}
         collapsible
@@ -203,7 +203,8 @@ export default function RootLayout({
             padding: 24,
             background: "#fff",
             borderRadius: 6,
-            minHeight: 280,
+            height: "calc(100vh - 88px)", // 减去header高度和上下margin
+            overflow: "auto",
           }}
         >
           {children}

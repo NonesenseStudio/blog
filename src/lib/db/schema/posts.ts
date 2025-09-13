@@ -5,7 +5,7 @@ export const posts = sqliteTable("posts", {
   ...baseColumns,
   title: text("name").notNull(),
   description: text("description"),
-  content: text("content").notNull(),
+  content: text("content"),
   status: text("status", { enum: ["draft", "published", "archived"] }).default(
     "draft",
   ),

@@ -79,7 +79,24 @@ interface ApiResponse<T> {
   pagination: PaginationData;
 }
 
-const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
+// 新增：操作按钮插槽类型
+interface ActionButtonsProps {
+  record: any;
+  onEdit: (record: any) => void;
+  onDelete: (record: any) => void;
+}
+
+interface AntCrudProps {
+  config: CrudConfig;
+  actionButtons?: React.FC<ActionButtonsProps>;
+  extraButtons?: React.ReactNode;
+}
+
+const AntCrud: React.FC<AntCrudProps> = ({
+  config,
+  actionButtons,
+  extraButtons,
+}) => {
   const [form] = Form.useForm();
   const [searchForm] = Form.useForm();
   const [modalVisible, setModalVisible] = useState(false);
@@ -354,13 +371,15 @@ const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
         {/* 操作按钮 */}
         <div style={{ marginBottom: 16 }}>
           <Space>
-            <Button
-              type="primary"
-              icon={<PlusOutlined />}
-              onClick={handleCreate}
-            >
-              新建{config.title}
-            </Button>
+            {extraButtons || (
+              <Button
+                type="primary"
+                icon={<PlusOutlined />}
+                onClick={handleCreate}
+              >
+                新建{config.title}
+              </Button>
+            )}
           </Space>
         </div>
         {/* 数据表格 */}
@@ -390,7 +409,7 @@ const AntCrud: React.FC<{ config: CrudConfig }> = ({ config }) => {
           }}
           footer={null}
           width={600}
-          destroyOnClose
+          destroyOnHidden
           forceRender
         >
           <Form
