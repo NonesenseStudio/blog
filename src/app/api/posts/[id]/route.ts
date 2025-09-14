@@ -5,15 +5,12 @@ import { eq } from "drizzle-orm";
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params; // 解析 params Promise
     const db = await getDbAsync();
-    const post = await db
-      .select()
-      .from(posts)
-      .where(eq(posts.id, params.id))
-      .limit(1);
+    const post = await db.select().from(posts).where(eq(posts.id, id)).limit(1);
 
     if (post.length === 0) {
       return NextResponse.json({ error: "文章不存在" }, { status: 404 });
@@ -28,9 +25,10 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params; // 解析 params Promise
     const db = await getDbAsync();
     const body: {
       title: string;
@@ -46,7 +44,7 @@ export async function PUT(
     const existingPost = await db
       .select()
       .from(posts)
-      .where(eq(posts.id, params.id))
+      .where(eq(posts.id, id))
       .limit(1);
 
     if (existingPost.length === 0) {
@@ -78,7 +76,7 @@ export async function PUT(
         ...(path && { path }),
         updatedAt: new Date(),
       })
-      .where(eq(posts.id, params.id))
+      .where(eq(posts.id, id))
       .returning();
 
     return NextResponse.json(updatedPost[0]);
@@ -90,13 +88,14 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
+    const { id } = await params; // 解析 params Promise
     const db = await getDbAsync();
     const deleteResult = await db
       .delete(posts)
-      .where(eq(posts.id, params.id))
+      .where(eq(posts.id, id))
       .returning();
 
     if (deleteResult.length === 0) {
