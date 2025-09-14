@@ -3,6 +3,9 @@ import { getDbAsync } from "@/lib/db";
 import { posts } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 
+// 定义状态类型
+type PostStatus = "draft" | "published" | "archived";
+
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -34,7 +37,7 @@ export async function PUT(
       title: string;
       description: string;
       content: string;
-      status: string;
+      status: PostStatus; // 使用定义的状态类型
       etag?: string;
       path?: string;
     } = await request.json();
@@ -71,10 +74,10 @@ export async function PUT(
         ...(title && { title }),
         ...(description !== undefined && { description }),
         ...(content !== undefined && { content }),
-        ...(status && { status }),
+        ...(status && { status: status as PostStatus }), // 确保状态是正确的类型
         ...(etag !== undefined && { etag }),
         ...(path && { path }),
-        updatedAt: new Date(),
+        updatedAt: new Date().getTime(), // 使用 Date 对象而不是时间戳
       })
       .where(eq(posts.id, id))
       .returning();
