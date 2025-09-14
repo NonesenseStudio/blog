@@ -122,7 +122,7 @@ async function handleCreate(db: any, body: any) {
   const { title, description, content, status, etag, path } = body;
 
   // 验证必要字段
-  if (!title || !path) {
+  if (!title) {
     return NextResponse.json({ error: "标题和路径是必填项" }, { status: 400 });
   }
 
@@ -132,15 +132,15 @@ async function handleCreate(db: any, body: any) {
   }
 
   // 检查路径是否已存在
-  const existingPost = await db
-    .select()
-    .from(posts)
-    .where(eq(posts.path, path))
-    .limit(1);
-
-  if (existingPost.length > 0) {
-    return NextResponse.json({ error: "该路径已存在" }, { status: 400 });
-  }
+  // const existingPost = await db
+  //   .select()
+  //   .from(posts)
+  //   .where(eq(posts.path, path))
+  //   .limit(1);
+  //
+  // if (existingPost.length > 0) {
+  //   return NextResponse.json({ error: "该路径已存在" }, { status: 400 });
+  // }
 
   // 创建新文章
   const newPost = await db
