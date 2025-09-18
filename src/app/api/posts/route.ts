@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getDbAsync } from "@/lib/db";
 import { posts } from "@/lib/db/schema";
 import { and, desc, eq, ilike } from "drizzle-orm";
+import { generateUuid } from "@/lib/utils";
 
 // 获取文章列表
 export async function GET(request: NextRequest) {
@@ -146,15 +147,15 @@ async function handleCreate(db: any, body: any) {
   const newPost = await db
     .insert(posts)
     .values({
-      id: "",
+      id: generateUuid(true),
       title,
       description,
       content,
       status: status || "draft", // 默认为草稿
       etag,
       path,
-      createdAt: new Date(),
-      updatedAt: new Date(),
+      createdAt: new Date().valueOf(),
+      updatedAt: new Date().valueOf(),
     })
     .returning();
 

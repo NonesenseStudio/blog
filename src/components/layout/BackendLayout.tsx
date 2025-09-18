@@ -1,17 +1,8 @@
 "use client";
 
-import React from "react";
+import React, { useEffect } from "react";
+import { Layout as AntLayout, Menu, Avatar, Dropdown, MenuProps } from "antd";
 import {
-  ConfigProvider,
-  theme,
-  Layout as AntLayout,
-  Menu,
-  Avatar,
-  Dropdown,
-  MenuProps,
-} from "antd";
-import {
-  HomeOutlined,
   UserOutlined,
   SettingOutlined,
   LogoutOutlined,
@@ -25,9 +16,9 @@ import {
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 import { useState } from "react";
+import { useTheme } from "next-themes";
 
 const { Header, Sider, Content } = AntLayout;
-
 // 定义菜单项类型，符合 Ant Design 的 MenuProps 类型
 type MenuItem = Required<MenuProps>["items"][number];
 
@@ -72,29 +63,24 @@ export default function RootLayout({
   const router = useRouter();
 
   // 递归获取选中的菜单项
-  const getSelectedMenuKeys = (items: MenuItem[]): string[] => {
-    for (const item of items) {
-      // 检查 item 和 item.key 是否存在
-      if (
-        item &&
-        item.key &&
-        typeof item.key === "string" &&
-        pathname.startsWith(`/${item.key}`)
-      ) {
-        return [item.key];
-      }
-
-      // 检查子菜单
-      if (item && "children" in item && item.children) {
-        const childKeys = getSelectedMenuKeys(item.children as MenuItem[]);
-        if (childKeys.length > 0 && item.key && typeof item.key === "string") {
-          return [...childKeys, item.key];
-        }
-      }
+  const getSelectedMenuKeys = (): string[] => {
+    if (pathname) {
+      let names = pathname.split("/");
+      const lastKey = names[names.length - 1];
+      return lastKey ? [lastKey] : [];
     }
     return [];
   };
 
+  const getOpenKeys: string[] = menuItems
+    .filter(
+      (item): item is Required<MenuItem> & { children: MenuItem[] } =>
+        item !== null &&
+        item !== undefined &&
+        "children" in item &&
+        Array.isArray(item.children),
+    )
+    .map((item) => item.key as string);
   // 用户菜单项
   const userMenuItems = [
     {
@@ -146,14 +132,15 @@ export default function RootLayout({
         />
         <Menu
           mode="inline"
-          selectedKeys={getSelectedMenuKeys(menuItems)}
-          defaultOpenKeys={getSelectedMenuKeys(menuItems).slice(0, -1)}
+          defaultSelectedKeys={getSelectedMenuKeys()}
+          defaultOpenKeys={getOpenKeys}
           items={menuItems}
           style={{ borderRight: 0 }}
         />
       </Sider>
       <AntLayout>
         <Header
+          className="bg-background dark:bg-background"
           style={{
             padding: 0,
             background: "#fff",
@@ -198,11 +185,9 @@ export default function RootLayout({
           </div>
         </Header>
         <Content
+          className="bg-background dark:bg-background"
           style={{
-            margin: "24px",
             padding: 24,
-            background: "#fff",
-            borderRadius: 6,
             height: "calc(100vh - 88px)", // 减去header高度和上下margin
             overflow: "auto",
           }}

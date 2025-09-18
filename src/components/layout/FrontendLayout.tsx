@@ -2,17 +2,24 @@
 
 import Layout from "./AntLayout";
 import React, { useState, useEffect } from "react";
-import { Layout as AntLayout, Menu, Avatar, Dropdown } from "antd";
 import {
-  UserOutlined,
-  SettingOutlined,
-  LogoutOutlined,
-} from "@ant-design/icons";
+  Layout as AntLayout,
+  Menu,
+  Input,
+  GetProps,
+  Button,
+  Drawer,
+} from "antd";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
 const { Header, Content } = AntLayout;
 import Logo from "@/components/logo";
 import { useTheme } from "next-themes";
+import { MenuOutlined } from "@ant-design/icons";
+import MobileTabs from "@/components/layout/Modules/MobileTabs";
+
+type SearchProps = GetProps<typeof Input.Search>;
+const { Search } = Input;
 
 export default function RootLayout({
   children,
@@ -24,6 +31,7 @@ export default function RootLayout({
   const pathname = usePathname();
   const router = useRouter();
   const [selectedKeys, setSelectedKeys] = useState<string[]>([]);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -48,43 +56,13 @@ export default function RootLayout({
       label: <Link href="/posts">文章</Link>,
     },
     {
-      key: "categories",
-      label: <Link href="/categories">分类</Link>,
-    },
-    {
       key: "about",
       label: <Link href="/about">关于 boring</Link>,
     },
   ];
-  // 用户菜单项
-  const userMenuItems = [
-    {
-      key: "profile",
-      icon: <UserOutlined />,
-      label: "个人资料",
-    },
-    {
-      key: "settings",
-      icon: <SettingOutlined />,
-      label: "设置",
-    },
-    {
-      key: "logout",
-      icon: <LogoutOutlined />,
-      label: "退出登录",
-    },
-  ];
 
-  // 处理用户菜单点击
-  const handleUserMenuClick = ({ key }: { key: string }) => {
-    if (key === "logout") {
-      // 处理退出登录逻辑
-      console.log("退出登录");
-    } else if (key === "profile") {
-      router.push("/profile");
-    } else if (key === "settings") {
-      router.push("/settings");
-    }
+  const onSearch: SearchProps["onSearch"] = (value) => {
+    router.push(`/posts/search/?key=${value}`);
   };
 
   if (!mounted) {
@@ -113,16 +91,33 @@ export default function RootLayout({
           items={tabItems}
           style={{ flex: 1, minWidth: 0 }}
         />
-        <div className="mr-6">
-          <Dropdown
-            menu={{
-              items: userMenuItems,
-              onClick: handleUserMenuClick,
+        <div className="mr-6 flex items-center">
+          <Search
+            placeholder="搜索文章"
+            onSearch={onSearch}
+            enterButton
+            styles={{
+              // @ts-ignore
+              input: {
+                borderRadius: "25px 0 0 25px",
+                border: "1px solid #d9d9d9",
+                backgroundColor: "transparent",
+              },
             }}
-            placement="bottomRight"
-          >
-            <Avatar style={{ cursor: "pointer" }} icon={<UserOutlined />} />
-          </Dropdown>
+          />
+          {/*<Button*/}
+          {/*  icon={<MenuOutlined />}*/}
+          {/*  onClick={() => setOpen(true)}*/}
+          {/*></Button>*/}
+          {/*<Drawer*/}
+          {/*  title="Basic Drawer"*/}
+          {/*  closable={{ "aria-label": "Close Button" }}*/}
+          {/*  onClose={() => setOpen(false)}*/}
+          {/*  open={open}*/}
+          {/*  width="100%"*/}
+          {/*>*/}
+          {/*  <MobileTabs />*/}
+          {/*</Drawer>*/}
         </div>
       </Header>
       <Content className="p-6 min-h-70 bg-background dark:bg-background">

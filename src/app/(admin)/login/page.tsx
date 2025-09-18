@@ -4,16 +4,17 @@ import { Button, Form, Input, Card, Typography, message } from "antd";
 import { LockOutlined, MailOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
 import http from "@/lib/http";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Cookies from "js-cookie";
-import { getEnv } from "@/lib/env";
+import { useAuthStore, useCategoryStore } from "@/stores";
 
 const { Title } = Typography;
 export default function LoginPage() {
   const [messageApi, contextHolder] = message.useMessage();
   const router = useRouter();
   const [form] = Form.useForm();
-
+  const [loading, setLoading] = useState(false);
+  const authStore = useAuthStore();
   // 检查 cookie 是否存在且有效
   useEffect(() => {
     const token = Cookies.get("token");
@@ -35,21 +36,40 @@ export default function LoginPage() {
     }
   }, [router]);
 
+  const setCategory = () => {
+    http
+      .get("/api/categories")
+      .then((response) => {
+        const categories = response || [];
+        console.log(categories);
+        useCategoryStore.setState(categories);
+      })
+      .catch((error) => {
+        console.error("获取分类失败:", error);
+      });
+  };
   const handleSubmit = async (values: { email: string; password: string }) => {
-    try {
-      const response = await http.post("/api/auth/login", {
+    setLoading(true);
+    http
+      .post("/api/auth/login", {
         email: values.email,
         password: values.password,
+      })
+      .then((response) => {
+        console.log(response);
+        const { token, user } = response || "";
+        authStore.setUser(user);
+        setCategory();
+        Cookies.set("token", token, { expires: 7 });
+        router.push("/dashboard");
+      })
+      .catch((error) => {
+        messageApi.error("登录失败，请检查邮箱和密码是否正确");
+        console.error("登录失败:", error);
+      })
+      .finally(() => {
+        setLoading(false);
       });
-      // const { token } = response.data || "";
-
-      // Cookies.set("token", token, { expires: 7 });
-
-      // router.push("/dashboard");
-    } catch (error) {
-      messageApi.error("登录失败，请检查邮箱和密码是否正确");
-      console.error("登录失败:", error);
-    }
   };
 
   return (
@@ -100,6 +120,7 @@ export default function LoginPage() {
 
             <Form.Item>
               <Button
+                loading={loading}
                 type="primary"
                 htmlType="submit"
                 block

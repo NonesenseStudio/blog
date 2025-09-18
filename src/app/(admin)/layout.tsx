@@ -5,6 +5,7 @@ import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import "@/app/globals.css";
 import "@ant-design/v5-patch-for-react-19";
+import { useCategoryStore } from "@/stores";
 
 export const metadata: Metadata = {
   title: {
@@ -20,6 +21,7 @@ export default function RootLayout({
   return (
     <html lang="zh-CN" suppressHydrationWarning>
       <body>
+
         <ThemeProvider
           attribute="class" // 与 Tailwind 的 class 模式匹配
           defaultTheme="system" // 默认跟随系统

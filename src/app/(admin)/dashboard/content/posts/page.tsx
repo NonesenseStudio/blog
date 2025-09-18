@@ -2,9 +2,10 @@
 
 import React from "react";
 import AntCrud from "@/components/UI/AntCrud";
-import { Button } from "antd";
+import { Button, Tag } from "antd";
 import { PlusOutlined } from "@ant-design/icons";
 import { useRouter } from "next/navigation";
+import CategoryTree from "@/app/(admin)/dashboard/content/posts/CategoryTree";
 
 const PostPage = () => {
   const router = useRouter();
@@ -53,8 +54,7 @@ const PostPage = () => {
       idField: "id",
     },
     columns: [
-      { title: "名称", dataIndex: "name", key: "name", type: "text" },
-      { title: "Slug", dataIndex: "slug", key: "slug", type: "text" },
+      { title: "标题", dataIndex: "title", key: "title", type: "text" },
       {
         title: "描述",
         dataIndex: "description",
@@ -62,9 +62,38 @@ const PostPage = () => {
         type: "text",
       },
       {
-        title: "创建时间",
+        title: "状态",
+        dataIndex: "status",
+        key: "status",
+        type: "text",
+        render: (status: string) => {
+          let colors: any = {
+            published: "success",
+            draft: "warning",
+            archived: "processing",
+          };
+
+          return (
+            <Tag color={colors[status]}>
+              {status === "published"
+                ? "已发布"
+                : status === "draft"
+                  ? "草稿"
+                  : "已归档"}
+            </Tag>
+          );
+        },
+      },
+      {
+        title: "发表时间",
         dataIndex: "createdAt",
         key: "createdAt",
+        type: "date",
+      },
+      {
+        title: "修改时间",
+        dataIndex: "updatedAt",
+        key: "updatedAt",
         type: "date",
       },
     ],
@@ -77,7 +106,7 @@ const PostPage = () => {
       },
     ],
     formFields: [
-      { name: "name", label: "名称", type: "text", required: true },
+      { name: "title", label: "标题", type: "text", required: true },
       { name: "slug", label: "Slug", type: "text", required: true },
       { name: "description", label: "描述", type: "textarea" },
     ],
@@ -87,16 +116,23 @@ const PostPage = () => {
     },
   };
   return (
-    <AntCrud
-      config={categoryConfig}
-      extraButtons={
-        <>
-          <Button type="primary" icon={<PlusOutlined />} onClick={handleCreate}>
-            新建文章
-          </Button>
-        </>
-      }
-    />
+    <div className="flex">
+      <CategoryTree />
+      <AntCrud
+        config={categoryConfig}
+        extraButtons={
+          <>
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleCreate}
+            >
+              新建文章
+            </Button>
+          </>
+        }
+      />
+    </div>
   );
 };
 

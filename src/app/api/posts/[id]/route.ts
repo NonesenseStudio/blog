@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getDbAsync } from "@/lib/db";
-import { posts } from "@/lib/db/schema";
-import { eq } from "drizzle-orm";
+import { posts, postCategories, categories } from "@/lib/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 
 // 定义状态类型
 type PostStatus = "draft" | "published" | "archived";
@@ -106,6 +106,76 @@ export async function DELETE(
     }
 
     return new NextResponse(null, { status: 204 });
+  } catch (error) {
+    console.error(error);
+    return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });
+  }
+}
+
+// 新增：绑定文章和分类的接口
+export async function POST(
+  request: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
+  try {
+    const { id } = await params; // 解析 params Promise
+    const db = await getDbAsync();
+    const body: {
+      categoryIds: string[]; // 要绑定的分类ID数组
+    } = await request.json();
+    const { categoryIds } = body;
+
+    // 验证输入
+    if (
+      !categoryIds ||
+      !Array.isArray(categoryIds) ||
+      categoryIds.length === 0
+    ) {
+      return NextResponse.json(
+        { error: "请提供有效的分类ID数组" },
+        { status: 400 },
+      );
+    }
+
+    // 检查文章是否存在
+    const existingPost = await db
+      .select()
+      .from(posts)
+      .where(eq(posts.id, id))
+      .limit(1);
+
+    if (existingPost.length === 0) {
+      return NextResponse.json({ error: "文章不存在" }, { status: 404 });
+    }
+
+    // 检查所有分类是否存在
+    const existingCategories = await db
+      .select()
+      .from(categories)
+      .where(inArray(categories.id, categoryIds));
+
+    if (existingCategories.length !== categoryIds.length) {
+      return NextResponse.json(
+        { error: "一个或多个分类不存在" },
+        { status: 404 },
+      );
+    }
+
+    // 删除现有的所有分类绑定
+    await db.delete(postCategories).where(eq(postCategories.postId, id));
+
+    // 创建新的分类绑定
+    const newBindings = categoryIds.map((categoryId) => ({
+      postId: id,
+      categoryId,
+    }));
+
+    const insertedBindings = await db
+      .insert(postCategories)
+      .values(newBindings)
+      .returning();
+
+    return NextResponse.json(insertedBindings);
   } catch (error) {
     console.error(error);
     return NextResponse.json({ error: "服务器内部错误" }, { status: 500 });

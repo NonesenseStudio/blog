@@ -1,12 +1,10 @@
 import type { NextConfig } from "next";
 import { initOpenNextCloudflareForDev } from "@opennextjs/cloudflare";
 
-initOpenNextCloudflareForDev();
+initOpenNextCloudflareForDev().then((r) => r);
 const nextConfig: NextConfig = {
   /* config options here */
-  experimental: {
-    serverComponentsExternalPackages: ["drizzle-orm"],
-  },
+  serverExternalPackages: ["drizzle-orm"],
 };
 
 export default nextConfig;

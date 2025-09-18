@@ -1,15 +1,22 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Form, Input, Button, TreeSelect, Select, message, Space } from "antd";
+import React, { useEffect, useState } from "react";
+import { Button, Form, Input, message, Select, Space, TreeSelect } from "antd";
 import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { ArrowLeftOutlined, LoadingOutlined } from "@ant-design/icons";
 import http from "@/lib/http";
-
+import { useCategoryStore } from "@/stores";
 // 动态导入 MDEditor 以避免 SSR 问题
 const MDEditor = dynamic(
-  () => import("@uiw/react-md-editor").then((mod) => mod.default),
+  () =>
+    import("@uiw/react-md-editor").then((mod) => {
+      // 确保只在客户端渲染
+      if (typeof window === "undefined") {
+        return () => null;
+      }
+      return mod.default;
+    }),
   {
     ssr: false,
     loading: () => (
@@ -36,23 +43,31 @@ interface Category {
   name: string;
   parentId: string | null;
 }
+
 const NewArticlePage: React.FC = () => {
   const [form] = Form.useForm();
   const [content, setContent] = useState<string>("");
   const [submitting, setSubmitting] = useState<boolean>(false);
   const router = useRouter();
   const { SHOW_PARENT } = TreeSelect;
+  const { categories } = useCategoryStore();
 
   const [treeData, setTreeData] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
+  // 确保只在客户端渲染
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
 
   // 获取分类数据并转换为树形结构
   const fetchCategories = async () => {
+    if (!isClient) return; // 确保只在客户端执行
+
     setLoading(true);
     try {
-      const response = await http.get("/api/categories");
-      const categories = response.data;
-
       // 将扁平数据转换为树形结构
       const buildTree = (
         items: Category[],
@@ -71,17 +86,19 @@ const NewArticlePage: React.FC = () => {
       setTreeData(buildTree(categories));
     } catch (error) {
       console.error("获取分类数据失败:", error);
+      setHasError(true);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchCategories().then((r) => r);
-  }, []);
+    if (isClient) {
+      fetchCategories();
+    }
+  }, [isClient]);
+
   const handleSubmit = async (values: ArticleForm) => {
-    console.log(values, content);
-    const { status } = values;
     if (!content) {
       message.error("请输入文章内容");
       return;
@@ -89,13 +106,10 @@ const NewArticlePage: React.FC = () => {
 
     setSubmitting(true);
     try {
-      const response = await http.post("/api/posts", {
+      await http.post("/api/posts", {
         ...values,
         content,
       });
-      if (!response.ok) {
-        throw new Error("Failed to create article");
-      }
       message.success("文章创建成功！");
       router.push("/dashboard/content/posts");
     } catch (error) {
@@ -105,6 +119,15 @@ const NewArticlePage: React.FC = () => {
       setSubmitting(false);
     }
   };
+
+  // 错误状态处理
+  if (hasError) {
+    return (
+      <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
+        <div>加载失败，请刷新页面重试</div>
+      </div>
+    );
+  }
 
   return (
     <div style={{ maxWidth: 1200, margin: "0 auto", padding: "0 24px" }}>
@@ -127,11 +150,7 @@ const NewArticlePage: React.FC = () => {
           }}
         >
           <div className="flex">
-            <Form.Item
-              name="categories"
-              // rules={[{ required: true, message: "请选择文章分类" }]}
-              style={{ width: " 20%" }}
-            >
+            <Form.Item name="categories" style={{ width: "20%" }}>
               <TreeSelect
                 treeData={treeData}
                 loading={loading}
@@ -156,19 +175,22 @@ const NewArticlePage: React.FC = () => {
           <Form.Item name="status" hidden>
             <Input />
           </Form.Item>
-          <Form.Item label="内容" required>
-            <MDEditor
-              value={content}
-              onChange={(value) => setContent(value || "")}
-              height={600}
-              visibleDragbar={false}
-            />
-          </Form.Item>
+
+          {/* 只在客户端渲染编辑器 */}
+          {isClient && (
+            <Form.Item label="内容" required>
+              <MDEditor
+                value={content}
+                onChange={(value) => setContent(value || "")}
+                height={600}
+                visibleDragbar={false}
+              />
+            </Form.Item>
+          )}
 
           <Form.Item>
             <Button
               type="primary"
-              htmlType="submit"
               loading={submitting}
               style={{ marginRight: 8 }}
               onClick={() => {
@@ -179,6 +201,7 @@ const NewArticlePage: React.FC = () => {
               {submitting ? "保存中..." : "发表文章"}
             </Button>
             <Button
+              loading={submitting}
               onClick={() => {
                 form.setFieldsValue({ status: "draft" });
                 form.submit();
