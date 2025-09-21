@@ -4,13 +4,20 @@ import { h } from "vue";
 import { NuxtLink } from "#components";
 import dayjs from "dayjs";
 import { useDark } from "@vueuse/core";
+import { Search } from "@vicons/ionicons5";
 
 useHead({
   titleTemplate: (titleChunk) => {
     return titleChunk ? `${titleChunk} | Boring` : "A Boring Blog";
   },
 });
-const isDark = useDark();
+const router = useRouter();
+const isDark = ref<any>(false);
+const keyword = ref<string | null>("");
+const route = useRoute();
+const activeKey = computed(() => {
+  return route.name;
+});
 const menuOptions: MenuOption[] = [
   {
     label: () =>
@@ -46,9 +53,14 @@ const menuOptions: MenuOption[] = [
     key: "about",
   },
 ];
-const route = useRoute();
-const activeKey = computed(() => {
-  return route.name;
+
+const onSearch = () => {
+  if (keyword.value) {
+    router.push(`/posts/search?keyword=${keyword.value}`);
+  }
+};
+onMounted(() => {
+  isDark.value = useDark();
 });
 </script>
 
@@ -58,6 +70,18 @@ const activeKey = computed(() => {
       <n-space class="items-center">
         <logo :fill="isDark ? 'rgba(255, 255, 255, 0.82)' : '#000'"></logo>
         <n-menu :value="activeKey" mode="horizontal" :options="menuOptions" />
+        <n-input-group>
+          <n-input
+            placeholder="请输入关键字"
+            style="border-radius: 25px 0 0 25px"
+            v-model:value="keyword"
+          />
+          <n-button type="primary" ghost round @click="onSearch">
+            <template #icon>
+              <n-icon><search /></n-icon>
+            </template>
+          </n-button>
+        </n-input-group>
       </n-space>
     </n-layout-header>
     <n-layout-content content-style="padding: 24px;">
