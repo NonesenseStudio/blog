@@ -12,7 +12,7 @@ useHead({
   },
 });
 const router = useRouter();
-const isDark = ref<any>(false);
+let isDark = ref<any>(false);
 const keyword = ref<string | null>("");
 const route = useRoute();
 const activeKey = computed(() => {
@@ -60,7 +60,7 @@ const onSearch = () => {
   }
 };
 onMounted(() => {
-  isDark.value = useDark();
+  isDark = useDark();
 });
 </script>
 
