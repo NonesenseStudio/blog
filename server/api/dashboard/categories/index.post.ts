@@ -10,7 +10,7 @@ export default defineEventHandler(async (event) => {
       parentId: body.parentId || null,
     };
 
-    const result = await categoryService.create(newCategory);
+    const result = await categoryService.create(event,newCategory);
 
     return { success: true, data: result };
   } catch (error) {

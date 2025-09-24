@@ -15,7 +15,7 @@ export default defineEventHandler(async (event) => {
       parentId: body.parentId || null,
     };
 
-    const result = await categoryService.update(id, updateData);
+    const result = await categoryService.update(event, id, updateData);
 
     if (!result) {
       return { success: false, error: "Category not found" };

@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
       return { success: false, error: "ID is required" };
     }
 
-    const result = await categoryService.delete(id);
+    const result = await categoryService.delete(event, id);
 
     if (!result) {
       return { success: false, error: "Category not found" };

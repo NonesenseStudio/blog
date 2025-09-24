@@ -316,12 +316,15 @@ const handleDelete = async (id: string) => {
 
   try {
     deleting.value = true;
-    await apiRequest(`/${id}`, {
+    const response: any = await apiRequest(`/${id}`, {
       method: "DELETE",
     });
-
-    message.success("删除成功");
-    await fetchData();
+    if (response.success) {
+      message.success("删除成功");
+      await fetchData();
+    } else {
+      message.error(response.error);
+    }
   } catch (error) {
     // 错误已在 apiRequest 中处理
   } finally {

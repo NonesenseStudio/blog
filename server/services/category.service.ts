@@ -1,7 +1,7 @@
-// server/services/categoryService.ts
 import { useDrizzle } from "~~/server/utils/drizzle";
 import { categories } from "~~/server/database/schema";
 import { eq, sql, ilike, or, desc } from "drizzle-orm";
+import { H3Event } from "h3";
 
 export interface QueryParams {
   page?: number;
@@ -21,6 +21,19 @@ export interface QueryResult {
   };
 }
 
+// 验证token的辅助函数
+const verifyToken = (event: H3Event): boolean => {
+  const token = getCookie(event, "auth_token");
+  if (!token) {
+    throw createError({
+      statusCode: 401,
+      message: "未授权访问，请先登录",
+    });
+  }
+  // 这里可以添加更多的token验证逻辑
+  return true;
+};
+
 export const categoryService = {
   async getAll() {
     const db = useDrizzle();
@@ -36,13 +49,15 @@ export const categoryService = {
     return result[0] || null;
   },
 
-  async create(data: any) {
+  async create(event: H3Event, data: any) {
+    verifyToken(event);
     const db = useDrizzle();
     const result = await db.insert(categories).values(data).returning();
     return result[0];
   },
 
-  async update(id: string, data: any) {
+  async update(event: H3Event, id: string, data: any) {
+    verifyToken(event);
     const db = useDrizzle();
     const result = await db
       .update(categories)
@@ -52,7 +67,8 @@ export const categoryService = {
     return result[0] || null;
   },
 
-  async delete(id: string) {
+  async delete(event: H3Event, id: string) {
+    verifyToken(event);
     const db = useDrizzle();
     const result = await db
       .delete(categories)
